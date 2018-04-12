@@ -8,8 +8,11 @@ You will need to have the ACE 2005 data set in the format required by this file.
 Train and test the model: using file ed_train.py
 # Coding environment
 Python 3.6.4
+
 numpy 1.14.2
+
 tensorflow 1.6.0
+
 
 ## References:
 
