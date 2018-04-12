@@ -5,7 +5,7 @@ There are two steps to run this code:
 Preprocessing: using file data_script.py and encode_window.py
 You will need to have the ACE 2005 data set in the format required by this file. We cannot include the data in this release due to licence issues.
 
-The dataset given to us is in xml format. We made the cjanges in the data_script.py file. Contain 38 event.subtypes
+The dataset given to us is in xml format. We made major changes in the data_script.py and ed_train.py file. Contain 38 event.subtypes
 
 Train and test the model: using file ed_train.py
 # Coding environment
