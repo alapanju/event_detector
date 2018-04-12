@@ -6,6 +6,10 @@ Preprocessing: using file data_script.py and encode_window.py
 You will need to have the ACE 2005 data set in the format required by this file. We cannot include the data in this release due to licence issues.
 
 Train and test the model: using file ed_train.py
+# Coding environment
+Python 3.6.4
+numpy 1.14.2
+tensorflow 1.6.0
 
 ## References:
 
