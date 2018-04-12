@@ -12,22 +12,23 @@ tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device 
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 tf.flags.DEFINE_integer("evaluate_every", 100, "")
 tf.flags.DEFINE_integer("checkpoint_every", 1000, "")
-tf.flags.DEFINE_integer("num_epochs", 300, "")
+tf.flags.DEFINE_integer("num_epochs", 25, "")
 FLAGS = tf.flags.FLAGS
 
 if __name__ == '__main__':
     vectors, sents, anchor = load_data("windows1.bin", "labels1.bin")
-    _, sents_test1, anchor_test1 = load_data("windows2.bin", "labels2.bin")
-    _, sent_test2, anchor_test2 = load_data("windows3.bin", "labels3.bin")
-    _, sent_test3, anchor_test3 = load_data("windows4.bin", "labels4.bin")
+    #_, sents_test1, anchor_test1 = load_data("windows2.bin", "labels2.bin")
+    #_, sent_test2, anchor_test2 = load_data("windows3.bin", "labels3.bin")
+    #_, sent_test3, anchor_test3 = load_data("windows4.bin", "labels4.bin")
     sents = np.array(sents)
     anchor = np.array(anchor)
     vocab_length = len(vectors)
-    print(len(sents))
+    print("Sents length : ", len(sents), " Anchor length : ", len(anchor), " Vocab length : ", vocab_length)
     np.random.seed(10)
     shuffle_indices = np.random.permutation(np.arange(len(sents)))
     sent_shuffled = sents[shuffle_indices]
     anchor_shuffled = anchor[shuffle_indices]
+    num_labels = 39
 
     dev_sample_index = int(FLAGS.split * float(len(sents)))
     test_sample_index = dev_sample_index + int(FLAGS.dev_size * float(len(sents)))
@@ -37,20 +38,26 @@ if __name__ == '__main__':
                                anchor_shuffled[test_sample_index:]
     sent_dev, anchor_dev = data_evaluate(sent_dev, anchor_dev)
     sent_test, anchor_test = data_evaluate(sent_test, anchor_test)
-    anchor_train_std = np.zeros((len(anchor_train), 34))
+    anchor_train_std = np.zeros((len(anchor_train), num_labels))
+    #anchor_train_std = np.zeros((len(anchor_train), 34))
     anchor_train_std[range(len(anchor_train)), anchor_train] = 1
-    anchor_dev_std = np.zeros((len(anchor_dev), 34))
+    anchor_dev_std = np.zeros((len(anchor_dev), num_labels))
+    #anchor_dev_std = np.zeros((len(anchor_dev), 34))
     anchor_dev_std[range(len(anchor_dev)), anchor_dev] = 1
-    anchor_test_std = np.zeros((len(anchor_test), 34))
+    anchor_test_std = np.zeros((len(anchor_test), num_labels))
+    #anchor_test_std = np.zeros((len(anchor_test), 34))
     anchor_test_std[range(len(anchor_test)), anchor_test] = 1
+    '''
     anchor_test1_std = np.zeros((len(anchor_test1), 34))
     anchor_test1_std[range(len(anchor_test1)), anchor_test1] = 1
     anchor_test2_std = np.zeros((len(anchor_test2), 34))
     anchor_test2_std[range(len(anchor_test2)), anchor_test2] = 1
     anchor_test3_std = np.zeros((len(anchor_test3), 34))
     anchor_test3_std[range(len(anchor_test3)), anchor_test3] = 1
-    print("demension: %d, train_size: %d, test_size: %d"
-          %( 300, sent_train.shape[0], sent_dev.shape[0]))
+    '''
+    print("dimension: %d, train_size: %d, test_size: %d, length: %d"
+          %( 300, sent_train.shape[0], sent_dev.shape[0], sent_train.shape[1]))
+    print("anchor dimension ", anchor_train.shape)
 
     with tf.Graph().as_default():
         session_conf = tf.ConfigProto(
@@ -115,11 +122,12 @@ if __name__ == '__main__':
                 cnn.dropout_keep_prob: 0.5,
                 cnn.size_batch : size_batch
             }
+            start_time = time.time()
             _, step, summaries, loss = sess.run(
                 [train_op, global_step, train_summary_op, cnn.loss],
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            print("\rtraining:{}:epoch {} step {}, loss {:g}".format(time_str,e, step, loss))
+            print("training: {} epoch = {} step = {} loss = {}".format((time.time() - start_time),e, step, loss))
             train_summary_writer.add_summary(summaries, step)
         final = []
         def dev_step(x_batch, y_batch):
@@ -133,11 +141,13 @@ if __name__ == '__main__':
                 cnn.dropout_keep_prob: 0.5,
                 cnn.size_batch : len(x_batch)
             }
+            start_time = time.time()
             _, step, summaries, loss = sess.run(
                 [train_op, global_step, train_summary_op, cnn.loss],
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            print("\rdevolped: {}:epoch {} step {}, loss {:g}".format(time_str,e, step, loss))
+            #precision, recall, f1_score, status = precision_recall_fscore_support(y_batch,np.array(y_pred), labels=range(1, num_labels),pos_label=None,average='micro')
+            print("Devoloped = {}, epoch = {} step = {} loss = {}".format((time.time() - start_time),e, step, loss))
             train_summary_writer.add_summary(summaries, step)
         
         def test_step(x, y_batch, y, writer=None):
@@ -151,22 +161,23 @@ if __name__ == '__main__':
                 cnn.dropout_keep_prob: 0.5,
                 cnn.size_batch : len(x)
             }
+            start_time = time.time()
             step, summaries, y_pred = sess.run(
                 [global_step, dev_summary_op, cnn.predictions],
                 feed_dict)
             
             time_str = datetime.datetime.now().isoformat()
-            precision, recall, f1_score, status = precision_recall_fscore_support(y_batch, np.array(y_pred), 
-                                                                                  labels=range(1,34),
-                                                                                  pos_label=None,
-                                                                                  average='micro')
-            print("{}: step {}:".format(time_str, step))
-            print(precision, recall, f1_score)
+            precision, recall, f1_score, status = precision_recall_fscore_support(y_batch, np.array(y_pred), labels=range(0,num_labels), pos_label=None, average='micro')
+            print(y_pred)
+            print(y_batch)
+            print("Testing {} step = {}\n precision= {} recall= {} f1_score= {}".format(time.time() - start_time, step, precision,recall,f1_score))
+            print(step, precision, recall, f1_score)
             if writer:
                 writer.add_summary(summaries, step)
             final.append((precision, recall, f1_score))
+            
             if f1_score >= 0.63:
-                return True
+                return False
             else: return False
 
         # Generate batches
@@ -199,12 +210,14 @@ if __name__ == '__main__':
         print("Evaluate:")
         print("Training:")
         test_step(sent_test, anchor_test, anchor_test_std)
-        print("Test case 1:")
+        #print("Test case 1:")
+        '''
         test_step(sents_test1, anchor_test1, anchor_test1_std)
         print("Test case 2:")
         test_step(sents_test2, anchor_test2, anchor_test2_std)
         print("Test case 3:")
         test_step(sents_test3, anchor_test3, anchor_test3_std)
+    
         print("")
         path = saver.save(sess, final_prefix, global_step=current_step)
-        print("Saved model checkpoint to {}\n".format(path))
+        print("Saved model checkpoint to {}\n".format(path))'''
