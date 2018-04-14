@@ -5,11 +5,12 @@ import pickle
 
 class config():
     num_epochs = 2
+    # Indicates the window size for a given token
     sequence_length = 31
     batch_size = 50
     vocab_size = 16314
+    # Here the triger_size indicates the number of possible event subtypes
     triger_size = 39
-    #triger_size = 34
     position_embedded_size = 50
     embedding_size = 300
     filter_sizes = [2,3,4]
@@ -18,7 +19,7 @@ class config():
 
 class ed_model(object):
     def __init__(
-            self, config, vocab_length, vectors, l2_reg_lambda=0.003):
+            self, config, vectors, l2_reg_lambda=0.003):
         self.config = config
         self.input_x = tf.placeholder(tf.int32,
                                       [None, self.config.sequence_length], name="input_x")
@@ -127,32 +128,9 @@ class ed_model(object):
             with tf.name_scope("accuracy"):
                 correct_predictions = tf.equal(self.predictions, tf.argmax(self.input_y, 1))
                 self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
-            '''self.scores = []
-            losses = []
-            poolers =  tf.split(1, self.config.sequence_length, self.h_drop)
-            for x in range(len(poolers)):
-                tmp = poolers[x]
-                for i in range(self.config.triger_size - 1):
-                    if x + i >= self.config.sequence_length:
-                        tmp = tf.concat(1, (tmp, tf.zeros_like(poolers[0])))
-                    else:
-                        tmp = t
 
-            self.predictions = tf.transpose(tf.argmax(self.scores, 2, name="predictions"))
-            # CalculateMean cross-entropy loss
-            with tf.name_scope("loss"):
-                for score, label in zip(tf.unpack(self.scores),
-                                        [tf.squeeze(x, [1]) for x in  
-                                         tf.split(1, self.config.sequence_length, self.input_y)]):
-                    loss = tf.nn.softmax_cross_entropy_with_logits(score, label)
-                    losses.append(loss)
-                self.loss = tf.reduce_mean(tf.reshape(tf.pack(losses), [-1])) + l2_reg_lambda * l2_loss
-
-            # Accuracy
-            with tf.name_scope("accuracy"):
-                correct_predictions = tf.equal(self.predictions , tf.argmax(self.input_y,2))
-                self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")'''
 if __name__ == "__main__":
     cof = config()
     vectors = pickle.load(open("data_script/vector.bin", "rb"))
-    ed = ed_model(cof, 31, vectors)
+    #ed = ed_model(cof, 31, vectors)
+    ed = ed_model(cof, vectors)
