@@ -19,14 +19,16 @@ def encode_dictionary(input_iter, min_frequence=0, max_document_length=10000):
     vocab_processor.fit(input_iter)
     return vocab_processor
 
-
-def encode_window(tokens, anchors, vocab_processor):
+# Note the window size will always be odd
+def encode_window(tokens, anchors, vocab_processor, sequence_length=31):
     windows, window, labels = [], [], []
     unk = vocab_processor.vocabulary_._mapping["<UNK>"]
     j = 0
+    low_lim = sequence_length/2
+    print("Range of window size, lower = ", (-1*low_lim), " higher = ", (low_lim + 1))
     for doc in tokens:
         for tok in np.arange(len(doc)):
-            for i in np.arange(-15, 16):
+            for i in np.arange(-1*low_lim, low_lim+1):    #for i in np.arange(-15, 16):
                 if i + tok < 0 or i + tok >= len(doc):
                     window.append(unk)
                 else:
@@ -43,7 +45,7 @@ def encode_window(tokens, anchors, vocab_processor):
 def load_bin_vec(fname, vocab):
     """
         Loads 300x1 word vecs from Google (Mikolov) word2vec
-        """
+    """
     word_vecs = np.zeros((len(vocab), 300))
     count = 0
     # DeprecationWarning . Use gensim.models.KeyedVectors.load_word2vec_format
@@ -78,12 +80,14 @@ if __name__ == "__main__":
     #input_iter = create_document_iter(tokens1 + tokens2)
     input_iter = create_document_iter(tokens1)
     vocab = encode_dictionary(input_iter)
+    
+    sequence_length = 31
 
     vocab_list = list(vocab.vocabulary_._mapping.keys())
     word_vecs = load_bin_vec("GoogleNews-vectors-negative300.bin", vocab_list)
     pickle.dump(word_vecs, open("../vector.bin", "wb"))
     del word_vecs
-    windows1, labels1 = encode_window(tokens1, anchors1, vocab)
+    windows1, labels1 = encode_window(tokens1, anchors1, vocab, sequence_length)
     #windows2, labels2 = encode_window(tokens2, anchors2, vocab)
     pickle.dump(windows1, open("../windows1.bin", "wb"))
     pickle.dump(labels1, open("../labels1.bin", "wb"))
