@@ -1,3 +1,6 @@
+# Description
+This work is a part of my Deep Learning Term Project of Spring, 2018 titled "Event Extraction and Coreferencing". My other team members are : Avirup Saha and Gourab Kumar Patro. The final presentation slides are provided "DL Term Project presentation.pdf".
+
 # Event Detection
 
 There are two steps to run this code:
